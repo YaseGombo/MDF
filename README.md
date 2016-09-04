@@ -1,3 +1,5 @@
+This software is released under the MIT License, see LICENSE.txt.
+
 # Usage
 ```
 var mdf;
@@ -9,6 +11,3 @@ reader.onload = function(e){
 };
 
 reader.readAsArrayBuffer(/* File Object */);
-```
-
-This software is released under the MIT License, see LICENSE.txt.
