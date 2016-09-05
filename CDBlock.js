@@ -60,7 +60,7 @@ CDBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
 
 CDBlock.prototype.getDimension = function(){
   var dimension = 0;
-  
+
   switch(this.dependencyType){
   case 0:
   case 1:

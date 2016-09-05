@@ -75,6 +75,14 @@ MDF.ab2double = function(arrayBuffer, offset, littleEndian){
   return dataView.getFloat64(0, littleEndian);
 };
 
+MDF.str2u8arr = function(str){
+  var ary_u8 = new Uint8Array(str.length);
+  for(var i = 0; i < str.length; i++){
+    ary_u8[i] = str.charCodeAt(i);
+  }
+  return ary_u8;
+};
+
 // member functions
 MDF.prototype.initiallize = function(arrayBuffer){
   var offset = 0;
@@ -86,17 +94,20 @@ MDF.prototype.initiallize = function(arrayBuffer){
   this.hdBlock = new HDBlock(arrayBuffer, offset, littleEndian);
 
   offset = this.hdBlock.pFirstDGBlock;
-  if(offset != 0){
-    this.setDGBlocks(arrayBuffer, offset, littleEndian);
-  }
+  this.setDGBlocks(arrayBuffer, offset, littleEndian);
 };
 
 MDF.prototype.setDGBlocks = function(arrayBuffer, initialOffset, littleEndian){
   var offset = initialOffset;
 
-  while(offset != 0){
-    var dgBlock = new DGBlock(arrayBuffer, offset, littleEndian);
-    this.dgBlocks.push(dgBlock);
-    offset = dgBlock.pNextDGBlock;
+  while(offset){
+    var dg = new DGBlock(arrayBuffer, offset, littleEndian);
+    this.dgBlocks.push(dg);
+    offset = dg.pNextDGBlock;
+  }
+
+  for(var i = 0; i < this.dgBlocks.length; i++){
+    var dg = this.dgBlocks[i];
+    dg.readDataBlock(arrayBuffer, dg.pDataBlock, littleEndian);
   }
 };

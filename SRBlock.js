@@ -6,6 +6,8 @@ SRBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.numberOfReducedSamples = null;
   this.lengthOfTimeInterval = null;
 
+  this.pThisBlock = blockOffset;
+
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };
 

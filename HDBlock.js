@@ -102,11 +102,11 @@ HDBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
   }
 
 
-  if(this.pFileComment != 0){
+  if(this.pFileComment){
     this.fileComment = new TXBlock(arrayBuffer, this.pFileComment, littleEndian);
   }
 
-  if(this.pPRBlock != 0){
+  if(this.pPRBlock){
     this.prBlock = new PRBlock(arrayBuffer, this.pPRBlock, littleEndian);
   }
 

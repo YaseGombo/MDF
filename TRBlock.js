@@ -57,5 +57,7 @@ TRBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
 };
 
 TRBlock.prototype.setTriggerComment = function(arrayBuffer, initialOffset, littleEndian){
-  this.triggerComment = new TXBlock(arrayBuffer, initialOffset, littleEndian);
+  if(initialOffset){
+    this.triggerComment = new TXBlock(arrayBuffer, initialOffset, littleEndian);
+  }
 };

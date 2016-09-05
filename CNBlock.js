@@ -150,10 +150,10 @@ CNBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
     offset += len;
   }
 
-  if(this.pCCBlock != 0)  this.ccBlock = new CCBlock(arrayBuffer, this.pCCBlock, littleEndian);
-  if(this.pCEBlock != 0)  this.ceBlock = new CEBlock(arrayBuffer, this.pCEBlock, littleEndian);
-  if(this.pCDBlock != 0)  this.cdBlock = new CDBlock(arrayBuffer, this.pCDBlock, littleEndian);
-  if(this.pComment != 0)  this.comment = new TXBlock(arrayBuffer, this.pComment, littleEndian);
+  if(this.pCCBlock)  this.ccBlock = new CCBlock(arrayBuffer, this.pCCBlock, littleEndian);
+  if(this.pCEBlock)  this.ceBlock = new CEBlock(arrayBuffer, this.pCEBlock, littleEndian);
+  if(this.pCDBlock)  this.cdBlock = new CDBlock(arrayBuffer, this.pCDBlock, littleEndian);
+  if(this.pComment)  this.comment = new TXBlock(arrayBuffer, this.pComment, littleEndian);
 
 
   // method override
@@ -374,7 +374,7 @@ CNBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
 
 CNBlock.prototype.isTimeChannel = function(){
   var ans = null;
-  if(this && this.channelType != null) ans = (this.channelType == 1);
+  if(this.channelType != null) ans = (this.channelType == 1);
   return ans;
 };
 

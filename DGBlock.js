@@ -53,15 +53,12 @@ DGBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
 
   this.setCGBlocks(arrayBuffer, this.pFirstCGBlock, littleEndian);
   this.setTRBlock(arrayBuffer, this.pTRBlock, littleEndian);
-
-  // Reading the data block
-  this.readDataBlock(arrayBuffer, this.pDataBlock, littleEndian);
 };
 
 DGBlock.prototype.setCGBlocks = function(arrayBuffer, initialOffset, littleEndian){
   var offset = initialOffset;
 
-  while(offset != 0){
+  while(offset){
     var cgBlock = new CGBlock(arrayBuffer, offset, littleEndian);
     this.cgBlocks.push(cgBlock);
     offset = cgBlock.pNextCGBlock;
@@ -69,7 +66,7 @@ DGBlock.prototype.setCGBlocks = function(arrayBuffer, initialOffset, littleEndia
 };
 
 DGBlock.prototype.setTRBlock = function(arrayBuffer, initialOffset, littleEndian){
-  if(initialOffset != 0){
+  if(initialOffset){
     this.trBlock = new TRBlock(arrayBuffer, initialOffset, littleEndian);
   }
 };

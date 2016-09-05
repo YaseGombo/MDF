@@ -72,7 +72,7 @@ CGBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
 CGBlock.prototype.setCNBlocks = function(arrayBuffer, initialOffset, littleEndian){
   var offset = initialOffset;
 
-  while(offset != 0){
+  while(offset){
     var cnBlock = new CNBlock(arrayBuffer, offset, littleEndian);
     this.cnBlocks.push(cnBlock);
     offset = cnBlock.pNextCNBlock;
@@ -80,7 +80,7 @@ CGBlock.prototype.setCNBlocks = function(arrayBuffer, initialOffset, littleEndia
 };
 
 CGBlock.prototype.setComment = function(arrayBuffer, initialOffset, littleEndian){
-  if(initialOffset != 0){
+  if(initialOffset){
     this.comment = new TXBlock(arrayBuffer, initialOffset, littleEndian);
   }
 };
@@ -88,7 +88,7 @@ CGBlock.prototype.setComment = function(arrayBuffer, initialOffset, littleEndian
 CGBlock.prototype.setSRBlocks = function(arrayBuffer, initialOffset, littleEndian){
   var offset = initialOffset;
 
-  while(offset != 0){
+  while(offset){
     var srBlock = new SRBlock(arrayBuffer, offset, littleEndian);
     this.srBlocks.push(srBlock);
     offset = srBlock.pNextSRBlock;
