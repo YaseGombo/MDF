@@ -78,40 +78,42 @@ DGBlock.prototype.isSorted = function(){
 DGBlock.prototype.readDataBlock = function(arrayBuffer, initialOffset, littleEndian){
   var offset = initialOffset;
 
-  var cgCounters = (new Array(this.cgBlocks.length)).fill(0); // Zeros(this.cgBlocks.length);
+  if(offset){
+    var cgCounters = (new Array(this.cgBlocks.length)).fill(0); // Zeros(this.cgBlocks.length);
 
-  while(true){
-    var cgIndex = 0;
-    if(this.isSorted() == false){
-      var currentRecordID = MDF.ab2uint8(arrayBuffer, offset);
+    while(true){
+      var cgIndex = 0;
+      if(this.isSorted() == false){
+        var currentRecordID = MDF.ab2uint8(arrayBuffer, offset);
+        for(var i = 0; i < this.cgBlocks.length; i++){
+          if(this.cgBlocks[i].recordID == currentRecordID){
+            cgIndex = i;
+            break;
+          }
+        }
+      }
+      var currentCGBlock = this.cgBlocks[cgIndex];
+
+      if(this.numberOfRecordIDs > 0)  offset += 1;
+
+      for(var i = 0; i < currentCGBlock.cnBlocks.length; i++){
+        var theCNBlock = currentCGBlock.cnBlocks[i];
+        theCNBlock.pushRawData(arrayBuffer, offset, littleEndian);
+      }
+
+      offset += currentCGBlock.sizeOfDataRecord;
+      if(this.numberOfRecordIDs == 2)  offset += 1;
+
+      cgCounters[cgIndex]++;
+
+      var isEndOfDataBlock = true;
       for(var i = 0; i < this.cgBlocks.length; i++){
-        if(this.cgBlocks[i].recordID == currentRecordID){
-          cgIndex = i;
+        if(cgCounters[i] != this.cgBlocks[i].numberOfRecords){
+          isEndOfDataBlock = false;
           break;
         }
       }
+      if(isEndOfDataBlock) break;
     }
-    var currentCGBlock = this.cgBlocks[cgIndex];
-
-    if(this.numberOfRecordIDs > 0)  offset += 1;
-
-    for(var i = 0; i < currentCGBlock.cnBlocks.length; i++){
-      var theCNBlock = currentCGBlock.cnBlocks[i];
-      theCNBlock.pushRawData(arrayBuffer, offset, littleEndian);
-    }
-
-    offset += currentCGBlock.sizeOfDataRecord;
-    if(this.numberOfRecordIDs == 2)  offset += 1;
-
-    cgCounters[cgIndex]++;
-
-    var isEndOfDataBlock = true;
-    for(var i = 0; i < this.cgBlocks.length; i++){
-      if(cgCounters[i] != this.cgBlocks[i].numberOfRecords){
-        isEndOfDataBlock = false;
-        break;
-      }
-    }
-    if(isEndOfDataBlock) break;
   }
 };
