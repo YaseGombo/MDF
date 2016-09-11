@@ -1,4 +1,4 @@
-CGBlock = function(arrayBuffer, blockOffset, littleEndian){
+CGBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.pNextCGBlock = null;
@@ -11,6 +11,7 @@ CGBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.pFirstSRBlock = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
   this.cnBlocks = [];
   this.comment = null;
   this.srBlocks = [];
@@ -73,7 +74,7 @@ CGBlock.prototype.setCNBlocks = function(arrayBuffer, initialOffset, littleEndia
   var offset = initialOffset;
 
   while(offset){
-    var cnBlock = new CNBlock(arrayBuffer, offset, littleEndian);
+    var cnBlock = new CNBlock(arrayBuffer, offset, littleEndian, this);
     this.cnBlocks.push(cnBlock);
     offset = cnBlock.pNextCNBlock;
   }
@@ -81,7 +82,7 @@ CGBlock.prototype.setCNBlocks = function(arrayBuffer, initialOffset, littleEndia
 
 CGBlock.prototype.setComment = function(arrayBuffer, initialOffset, littleEndian){
   if(initialOffset){
-    this.comment = new TXBlock(arrayBuffer, initialOffset, littleEndian);
+    this.comment = new TXBlock(arrayBuffer, initialOffset, littleEndian, this);
   }
 };
 
@@ -89,8 +90,24 @@ CGBlock.prototype.setSRBlocks = function(arrayBuffer, initialOffset, littleEndia
   var offset = initialOffset;
 
   while(offset){
-    var srBlock = new SRBlock(arrayBuffer, offset, littleEndian);
+    var srBlock = new SRBlock(arrayBuffer, offset, littleEndian, this);
     this.srBlocks.push(srBlock);
     offset = srBlock.pNextSRBlock;
   }
+};
+
+CGBlock.prototype.indexOfTimeChannel = function(){
+  for(var i = 0; i < this.cnBlocks.length; i++){
+    var cn = this.cnBlocks[i];
+    if(cn.isTimeChannel())  return i;
+  }
+
+  return -1;
+};
+
+CGBlock.prototype.timeChannel = function(){
+  var idx = this.indexOfTimeChannel();
+  if(idx >= 0)  return this.cnBlocks[idx];
+
+  return null;
 };

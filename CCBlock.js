@@ -14,7 +14,7 @@
  *  65535 = 1:1 conversion formula (Int = Phys)
  */
 
-CCBlock = function(arrayBuffer, blockOffset, littleEndian){
+CCBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.physicalValueRangeValid = null;
@@ -26,6 +26,7 @@ CCBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.additionalConversionData = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };
@@ -317,4 +318,12 @@ CCBlock.prototype.setAdditinalConversionData = function(arrayBuffer, initialOffs
 // This is dummy function to advoid undefined error.
 CCBlock.prototype.convert = function(rawData){
   return null;
+};
+
+CCBlock.prototype.convertAll = function(rawDataArray){
+  var actDataArray = [];
+  for(var i = 0; i < rawDataArray.length; i++){
+    actDataArray.push(this.convert(rawDataArray[i]));
+  }
+  return actDataArray;
 };

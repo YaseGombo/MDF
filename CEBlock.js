@@ -1,10 +1,11 @@
-CEBlock = function(arrayBuffer, blockOffset, littleEndian){
+CEBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.extensionType = null;
   this.additionalFields = [];
   
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };

@@ -1,10 +1,13 @@
-MDF = function(arrayBuffer){
+MDF = function(arrayBuffer, f_read){
   // members
   this.idBlock = null;
   this.hdBlock = null;
   this.dgBlocks = [];
+  this.arrayBuffer = null;
 
   this.initiallize(arrayBuffer);
+  if(f_read != false) this.readDataBlocks(arrayBuffer);
+  else  this.arrayBuffer = arrayBuffer;
 };
 
 // static functions
@@ -15,7 +18,7 @@ MDF.ab2bytes = function(arrayBuffer, offset, len){
 MDF.ab2str = function(arrayBuffer, offset, len){
   var ary_u8 = new Uint8Array(arrayBuffer, offset, len);
   var str_with_nul = String.fromCharCode.apply(null, ary_u8);
-  return String.split(str_with_nul, '\0')[0];
+  return str_with_nul.split('\0')[0];
 };
 MDF.ab2uint8 = function(arrayBuffer, offset){
   var dataView = new DataView(arrayBuffer, offset, 1);
@@ -86,12 +89,12 @@ MDF.str2u8arr = function(str){
 // member functions
 MDF.prototype.initiallize = function(arrayBuffer){
   var offset = 0;
-  this.idBlock = new IDBlock(arrayBuffer, offset);
+  this.idBlock = new IDBlock(arrayBuffer, offset, this);
 
   var littleEndian = this.idBlock.isLittleEndian(); // (this.idBlock.defaultByteOrder == 0);
 
   offset = 64;
-  this.hdBlock = new HDBlock(arrayBuffer, offset, littleEndian);
+  this.hdBlock = new HDBlock(arrayBuffer, offset, littleEndian, this);
 
   offset = this.hdBlock.pFirstDGBlock;
   this.setDGBlocks(arrayBuffer, offset, littleEndian);
@@ -101,13 +104,93 @@ MDF.prototype.setDGBlocks = function(arrayBuffer, initialOffset, littleEndian){
   var offset = initialOffset;
 
   while(offset){
-    var dg = new DGBlock(arrayBuffer, offset, littleEndian);
+    var dg = new DGBlock(arrayBuffer, offset, littleEndian, this);
     this.dgBlocks.push(dg);
     offset = dg.pNextDGBlock;
   }
+};
+
+MDF.prototype.readDataBlocks = function(arrayBuffer){
+  if(arrayBuffer){
+    var littleEndian = this.idBlock.isLittleEndian(); // (this.idBlock.defaultByteOrder == 0);
+    for(var i = 0; i < this.dgBlocks.length; i++){
+      var dg = this.dgBlocks[i];
+      dg.readDataBlock(arrayBuffer, littleEndian);
+    }
+  }
+  else if(this.arrayBuffer){
+    this.readDataBlocks(this.arrayBuffer);
+  }
+};
+
+MDF.prototype.readDataBlockAt = function(indexes, arrayBuffer){
+  if(arrayBuffer){
+    var littleEndian = this.idBlock.isLittleEndian(); // (this.idBlock.defaultByteOrder == 0);
+    var dgIndex = indexes[0];
+    var dg = this.dgBlocks[dgIndex];
+    var cn = dg.readDataBlockAt(arrayBuffer, indexes.slice(1), littleEndian);
+    return cn;
+  }
+  else if(this.arrayBuffer){
+    return this.readDataBlockAt(indexes, this.arrayBuffer);
+  }
+  return null;
+};
+
+MDF.prototype.readDataBlockOf = function(cnBlock, arrayBuffer){
+  if(arrayBuffer){
+    var littleEndian = this.idBlock.isLittleEndian(); // (this.idBlock.defaultByteOrder == 0);
+    var dg = cnBlock.parent.parent;
+    dg.readDataBlockOf(arrayBuffer, cnBlock, littleEndian);
+    return cnBlock;
+  }
+  else if(this.arrayBuffer){
+    return this.readDataBlockOf(cnBlock, this.arrayBuffer);
+  }
+  return null;
+};
+
+MDF.prototype.searchIndexesIf = function(func){
+  var indexesArray = [];
 
   for(var i = 0; i < this.dgBlocks.length; i++){
     var dg = this.dgBlocks[i];
-    dg.readDataBlock(arrayBuffer, dg.pDataBlock, littleEndian);
+    for(var j = 0; j < dg.cgBlocks.length; j++){
+      var cg = dg.cgBlocks[j];
+      for(var k = 0; k < cg.cnBlocks.length; k++){
+        var cn = cg.cnBlocks[k];
+        if(func(cn, cg, dg, k, j, i)) indexesArray.push([i, j, k, cn]);
+      }
+    }
   }
+
+  return indexesArray;
+};
+
+MDF.prototype.searchChannelsIf = function(func){
+  var indexesArray = this.searchIndexesIf(func);
+  var cnArray = [];
+  for(var i = 0; i < indexesArray.length; i++){
+    var idx = indexesArray[i];
+    cnArray.push(this.dgBlocks[idx[0]].cgBlocks[idx[1]].cnBlocks[idx[2]]);
+  }
+  return cnArray;
+};
+
+MDF.prototype.searchIndexesByRegExp = function(regexp){
+  var func = (function(regexp, cn){
+    return cn.shortSignalName.search(regexp) != -1;
+  }).bind(this, regexp);
+  var indexesArray = this.searchIndexesIf(func);
+
+  return indexesArray;
+};
+
+MDF.prototype.searchChannelsByRegExp = function(regexp){
+  var func = (function(regexp, cn){
+    return cn.shortSignalName.search(regexp) != -1;
+  }).bind(this, regexp);
+  var cnArray = this.searchChannelsIf(func);
+
+  return cnArray;
 };

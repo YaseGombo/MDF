@@ -1,4 +1,4 @@
-CDBlock = function(arrayBuffer, blockOffset, littleEndian){
+CDBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.dependencyType = null;
@@ -9,6 +9,7 @@ CDBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.sizeOfDimensions = [];
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };

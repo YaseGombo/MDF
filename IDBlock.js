@@ -1,4 +1,4 @@
-IDBlock = function(arrayBuffer, blockOffset){
+IDBlock = function(arrayBuffer, blockOffset, _parent){
   // members
   this.fileIdentifier = null;
   this.formatIdentifier = null;
@@ -11,6 +11,7 @@ IDBlock = function(arrayBuffer, blockOffset){
   this.customFlags = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset);
 };

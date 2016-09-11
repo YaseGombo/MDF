@@ -1,4 +1,4 @@
-TRBlock = function(arrayBuffer, blockOffset, littleEndian){
+TRBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.pTriggerComment = null;
@@ -10,6 +10,7 @@ TRBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.triggerComment = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };
@@ -58,6 +59,6 @@ TRBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
 
 TRBlock.prototype.setTriggerComment = function(arrayBuffer, initialOffset, littleEndian){
   if(initialOffset){
-    this.triggerComment = new TXBlock(arrayBuffer, initialOffset, littleEndian);
+    this.triggerComment = new TXBlock(arrayBuffer, initialOffset, littleEndian, this);
   }
 };

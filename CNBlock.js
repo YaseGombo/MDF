@@ -26,7 +26,7 @@
  * --------------------------------------------------------------------
  */
 
-CNBlock = function(arrayBuffer, blockOffset, littleEndian){
+CNBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.pNextCNBlock = null;
@@ -50,6 +50,7 @@ CNBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.additionalByteOffset = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
   this.ccBlock = null;
   this.ceBlock = null;
   this.cdBlock = null;
@@ -150,10 +151,10 @@ CNBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
     offset += len;
   }
 
-  if(this.pCCBlock)  this.ccBlock = new CCBlock(arrayBuffer, this.pCCBlock, littleEndian);
-  if(this.pCEBlock)  this.ceBlock = new CEBlock(arrayBuffer, this.pCEBlock, littleEndian);
-  if(this.pCDBlock)  this.cdBlock = new CDBlock(arrayBuffer, this.pCDBlock, littleEndian);
-  if(this.pComment)  this.comment = new TXBlock(arrayBuffer, this.pComment, littleEndian);
+  if(this.pCCBlock)  this.ccBlock = new CCBlock(arrayBuffer, this.pCCBlock, littleEndian, this);
+  if(this.pCEBlock)  this.ceBlock = new CEBlock(arrayBuffer, this.pCEBlock, littleEndian, this);
+  if(this.pCDBlock)  this.cdBlock = new CDBlock(arrayBuffer, this.pCDBlock, littleEndian, this);
+  if(this.pComment)  this.comment = new TXBlock(arrayBuffer, this.pComment, littleEndian, this);
 
 
   // method override
@@ -477,4 +478,8 @@ CNBlock.prototype.pushRawData = function(arrayBuffer, recordOffset){
 
   var arrayLength = this.rawDataArray.push(rawData);
   return arrayLength;
+};
+
+CNBlock.prototype.getPhysicalDataArray = function(){
+  return this.ccBlock.convertAll(this.rawDataArray);
 };

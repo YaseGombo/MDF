@@ -1,9 +1,10 @@
-TXBlock = function(arrayBuffer, blockOffset, littleEndian){
+TXBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.text = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };

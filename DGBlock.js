@@ -1,4 +1,4 @@
-DGBlock = function(arrayBuffer, blockOffset, littleEndian){
+DGBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.pNextDGBlock = null;
@@ -9,6 +9,7 @@ DGBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.numberOfRecordIDs = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
   this.trBlock = null;
   this.cgBlocks = [];
 
@@ -59,7 +60,7 @@ DGBlock.prototype.setCGBlocks = function(arrayBuffer, initialOffset, littleEndia
   var offset = initialOffset;
 
   while(offset){
-    var cgBlock = new CGBlock(arrayBuffer, offset, littleEndian);
+    var cgBlock = new CGBlock(arrayBuffer, offset, littleEndian, this);
     this.cgBlocks.push(cgBlock);
     offset = cgBlock.pNextCGBlock;
   }
@@ -67,7 +68,7 @@ DGBlock.prototype.setCGBlocks = function(arrayBuffer, initialOffset, littleEndia
 
 DGBlock.prototype.setTRBlock = function(arrayBuffer, initialOffset, littleEndian){
   if(initialOffset){
-    this.trBlock = new TRBlock(arrayBuffer, initialOffset, littleEndian);
+    this.trBlock = new TRBlock(arrayBuffer, initialOffset, littleEndian, this);
   }
 };
 
@@ -75,15 +76,15 @@ DGBlock.prototype.isSorted = function(){
   return (this.cgBlocks.length == 1);
 };
 
-DGBlock.prototype.readDataBlock = function(arrayBuffer, initialOffset, littleEndian){
-  var offset = initialOffset;
+DGBlock.prototype.readDataBlock = function(arrayBuffer, littleEndian){
+  var offset = this.pDataBlock;
 
   if(offset){
-    var cgCounters = (new Array(this.cgBlocks.length)).fill(0); // Zeros(this.cgBlocks.length);
+    if(this.isSorted() == false){
+      var cgCounters = (new Array(this.cgBlocks.length)).fill(0); // Zeros(this.cgBlocks.length);
 
-    while(true){
-      var cgIndex = 0;
-      if(this.isSorted() == false){
+      while(true){
+        var cgIndex = 0;
         var currentRecordID = MDF.ab2uint8(arrayBuffer, offset);
         for(var i = 0; i < this.cgBlocks.length; i++){
           if(this.cgBlocks[i].recordID == currentRecordID){
@@ -91,29 +92,114 @@ DGBlock.prototype.readDataBlock = function(arrayBuffer, initialOffset, littleEnd
             break;
           }
         }
-      }
-      var currentCGBlock = this.cgBlocks[cgIndex];
+        var currentCGBlock = this.cgBlocks[cgIndex];
 
-      if(this.numberOfRecordIDs > 0)  offset += 1;
-
-      for(var i = 0; i < currentCGBlock.cnBlocks.length; i++){
-        var theCNBlock = currentCGBlock.cnBlocks[i];
-        theCNBlock.pushRawData(arrayBuffer, offset, littleEndian);
-      }
-
-      offset += currentCGBlock.sizeOfDataRecord;
-      if(this.numberOfRecordIDs == 2)  offset += 1;
-
-      cgCounters[cgIndex]++;
-
-      var isEndOfDataBlock = true;
-      for(var i = 0; i < this.cgBlocks.length; i++){
-        if(cgCounters[i] != this.cgBlocks[i].numberOfRecords){
-          isEndOfDataBlock = false;
-          break;
+        /* if(this.numberOfRecordIDs > 0) */  offset += 1;
+        for(var i = 0; i < currentCGBlock.cnBlocks.length; i++){
+          var theCNBlock = currentCGBlock.cnBlocks[i];
+          theCNBlock.rawDataArray[cgCounters[cgIndex]] = theCNBlock.readRawData(arrayBuffer, offset);
         }
+
+        offset += currentCGBlock.sizeOfDataRecord;
+        if(this.numberOfRecordIDs >= 2)  offset += 1;
+
+        cgCounters[cgIndex]++;
+
+        var isEndOfDataBlock = true;
+        for(var i = 0; i < this.cgBlocks.length; i++){
+          if(cgCounters[i] < this.cgBlocks[i].numberOfRecords){
+            isEndOfDataBlock = false;
+            break;
+          }
+        }
+        if(isEndOfDataBlock) break;
       }
-      if(isEndOfDataBlock) break;
+    }
+    else {  // this.isSorted() == true
+      var currentCGBlock = this.cgBlocks[0];
+      for(var cgCounter = 0; cgCounter < currentCGBlock.numberOfRecords; cgCounter++){
+
+        if(this.numberOfRecordIDs > 0)  offset += 1;
+
+        for(var i = 0; i < currentCGBlock.cnBlocks.length; i++){
+          var theCNBlock = currentCGBlock.cnBlocks[i];
+          theCNBlock.rawDataArray[cgCounter] = theCNBlock.readRawData(arrayBuffer, offset);
+        }
+
+        offset += currentCGBlock.sizeOfDataRecord;
+        if(this.numberOfRecordIDs >= 2)  offset += 1;
+      }
     }
   }
+};
+
+DGBlock.prototype.readDataBlockAt = function(arrayBuffer, indexes, littleEndian){
+  var cgIndex = indexes[0];
+  var currentCGBlock = this.cgBlocks[cgIndex];
+  var cnIndex = indexes[1];
+  var theCNBlock = currentCGBlock.cnBlocks[cnIndex];
+
+  this.readDataBlockOf(arrayBuffer, theCNBlock, littleEndian);
+
+  return theCNBlock;
+};
+
+DGBlock.prototype.readDataBlockOf = function(arrayBuffer, theCNBlock, littleEndian){
+  var offset = this.pDataBlock;
+
+  var currentCGBlock = theCNBlock.parent;
+
+  if(offset){
+    if(this.isSorted() == false){
+      var startPoint = (theCNBlock.rawDataArray.length) ? theCNBlock.rawDataArray.length : 0;
+
+      var cgCounter = 0;
+      while(cgCounter < startPoint){
+        var currentRecordID = MDF.ab2uint8(arrayBuffer, offset);
+        /* if(this.numberOfRecordIDs > 0) */  offset += 1;
+
+        if(currentCGBlock.recordID == currentRecordID){
+          cgCounter++;
+        }
+
+        offset += currentCGBlock.sizeOfDataRecord;
+        if(this.numberOfRecordIDs >= 2)  offset += 1;
+      }
+
+      while(cgCounter < currentCGBlock.numberOfRecords){
+        var currentRecordID = MDF.ab2uint8(arrayBuffer, offset);
+        /* if(this.numberOfRecordIDs > 0) */  offset += 1;
+
+        if(currentCGBlock.recordID == currentRecordID){
+          theCNBlock.pushRawData(arrayBuffer, offset);
+          cgCounter++;
+        }
+
+        offset += currentCGBlock.sizeOfDataRecord;
+        if(this.numberOfRecordIDs >= 2)  offset += 1;
+      }
+    }
+    else {  // this.isSorted() == true
+      var startPoint = (theCNBlock.rawDataArray.length) ? theCNBlock.rawDataArray.length : 0;
+
+      var cgCounter = 0;
+      for(; cgCounter < startPoint; cgCounter++){
+        if(this.numberOfRecordIDs > 0)  offset += 1;
+
+        offset += currentCGBlock.sizeOfDataRecord;
+        if(this.numberOfRecordIDs >= 2)  offset += 1;
+      }
+
+      for(; cgCounter < currentCGBlock.numberOfRecords; cgCounter++){
+        if(this.numberOfRecordIDs > 0)  offset += 1;
+
+        theCNBlock.pushRawData(arrayBuffer, offset);
+
+        offset += currentCGBlock.sizeOfDataRecord;
+        if(this.numberOfRecordIDs >= 2)  offset += 1;
+      }
+    }
+  }
+
+  return theCNBlock;
 };

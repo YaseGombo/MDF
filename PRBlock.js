@@ -1,9 +1,10 @@
-PRBlock = function(arrayBuffer, blockOffset, littleEndian){
+PRBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.programSpecificData = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };

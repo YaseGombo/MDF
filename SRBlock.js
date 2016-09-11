@@ -1,4 +1,4 @@
-SRBlock = function(arrayBuffer, blockOffset, littleEndian){
+SRBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   this.blockTypeIdentifier = null;
   this.blockSize = null;
   this.pNextSRBlock = null;
@@ -7,6 +7,7 @@ SRBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.lengthOfTimeInterval = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
 
   this.initiallize(arrayBuffer, blockOffset, littleEndian);
 };

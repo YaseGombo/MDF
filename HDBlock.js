@@ -1,4 +1,4 @@
-HDBlock = function(arrayBuffer, blockOffset, littleEndian){
+HDBlock = function(arrayBuffer, blockOffset, littleEndian, _parent){
   // members
   this.blockTypeIdentifier = null;
   this.blockSize = null;
@@ -18,6 +18,7 @@ HDBlock = function(arrayBuffer, blockOffset, littleEndian){
   this.timerIdentification = null;
 
   this.pThisBlock = blockOffset;
+  this.parent = _parent;
   this.fileComment = null;
   this.prBlock = null;
 
@@ -103,11 +104,11 @@ HDBlock.prototype.initiallize = function(arrayBuffer, blockOffset, littleEndian)
 
 
   if(this.pFileComment){
-    this.fileComment = new TXBlock(arrayBuffer, this.pFileComment, littleEndian);
+    this.fileComment = new TXBlock(arrayBuffer, this.pFileComment, littleEndian, this);
   }
 
   if(this.pPRBlock){
-    this.prBlock = new PRBlock(arrayBuffer, this.pPRBlock, littleEndian);
+    this.prBlock = new PRBlock(arrayBuffer, this.pPRBlock, littleEndian, this);
   }
 
 };
